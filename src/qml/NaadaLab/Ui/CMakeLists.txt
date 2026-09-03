@@ -15,6 +15,7 @@ qt_add_qml_module(NaadaLabUi
         Theme.qml
         UiMetrics.qml
         LabeledControl.qml
+        ActionButton.qml
 )
 
 add_library(NaadaLab::Ui ALIAS NaadaLabUi)
