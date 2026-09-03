@@ -1,6 +1,7 @@
 #ifdef _WIN32
 #include "MidiOut_WinMM.h"
 #include <QByteArray>
+#include <QDebug>
 
 MidiOut_WinMM::MidiOut_WinMM() {}
 MidiOut_WinMM::~MidiOut_WinMM() { close(); }

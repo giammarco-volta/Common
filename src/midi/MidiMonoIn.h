@@ -101,9 +101,14 @@ private:
     return isShort(ev) && (ev.message() == 0xB0) && (ev.data1 == cc);
   }
 
-  static bool isProgram(const MidiInEvent& ev)
+  static bool isProgramNumber(const MidiInEvent& ev)
   {
     return isShort(ev) && (ev.message() == 0xC0);
+  }
+
+  static bool isProgram(const MidiInEvent& ev)
+  {
+    return isProgramNumber(ev) || isControlChange(ev, 0) || isControlChange(ev, 32);
   }
 
   static bool isPitch(const MidiInEvent& ev)
@@ -119,6 +124,18 @@ private:
   static bool isSustainCC64(const MidiInEvent& ev)
   {
     return isShort(ev) && (ev.message() == 0xB0) && (ev.data1 == 64);
+  }
+
+  static bool isParameterControl(const MidiInEvent& ev)
+  {
+    return isControlChange(ev,   6) ||
+           isControlChange(ev,  38) ||
+           isControlChange(ev,  96) ||
+           isControlChange(ev,  97) ||
+           isControlChange(ev,  98) ||
+           isControlChange(ev,  99) ||
+           isControlChange(ev, 100) ||
+           isControlChange(ev, 101);
   }
 
   void resetState_NoLock()
