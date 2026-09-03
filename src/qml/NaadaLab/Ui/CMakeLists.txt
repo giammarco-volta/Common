@@ -1,5 +1,6 @@
 set_source_files_properties(
     Theme.qml
+    UiMetrics.qml
     PROPERTIES
         QT_QML_SINGLETON_TYPE TRUE
 )
@@ -12,6 +13,7 @@ qt_add_qml_module(NaadaLabUi
     NO_PLUGIN
     QML_FILES
         Theme.qml
+        UiMetrics.qml
 )
 
 add_library(NaadaLab::Ui ALIAS NaadaLabUi)
