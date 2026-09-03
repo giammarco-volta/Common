@@ -12,3 +12,5 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 find_package(Qt6 6.8 REQUIRED COMPONENTS Core)
 
 qt_standard_project_setup(REQUIRES 6.8)
+
+add_subdirectory(src/midi)
