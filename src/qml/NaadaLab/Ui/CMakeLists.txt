@@ -24,6 +24,7 @@ qt_add_qml_module(NaadaLabUi
         ManualView.qml
         DragValueField.qml
         MidiKnob.qml
+        SearchableSelectionPopup.qml
 )
 
 add_library(NaadaLab::Ui ALIAS NaadaLabUi)
