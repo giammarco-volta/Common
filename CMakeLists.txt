@@ -11,12 +11,15 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 find_package(Qt6 6.8 REQUIRED COMPONENTS
     Core
+    Gui
     Qml
     Quick
+    Svg
 )
 
 qt_standard_project_setup(REQUIRES 6.8)
 
 add_subdirectory(src/midi)
+add_subdirectory(src/manual)
 
 add_subdirectory(src/qml/NaadaLab/Ui)
