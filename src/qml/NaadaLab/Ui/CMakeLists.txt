@@ -23,6 +23,7 @@ qt_add_qml_module(NaadaLabUi
         FormSection.qml
         ManualView.qml
         DragValueField.qml
+        MidiKnob.qml
 )
 
 add_library(NaadaLab::Ui ALIAS NaadaLabUi)
