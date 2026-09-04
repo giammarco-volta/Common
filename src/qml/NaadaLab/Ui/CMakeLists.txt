@@ -19,6 +19,7 @@ qt_add_qml_module(NaadaLabUi
         MidiChannelSelector.qml
         ModalPanel.qml
         LabeledComboBox.qml
+        SearchableComboField.qml
 )
 
 add_library(NaadaLab::Ui ALIAS NaadaLabUi)
