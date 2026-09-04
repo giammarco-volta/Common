@@ -3,6 +3,7 @@ set(NAADALAB_MIDI_SOURCES
     IMidiOut.h
     MidiMessage.h
     MidiMonoIn.h
+    MidiMonoIn.cpp
     MidiInFactory.h
     MidiInFactory.cpp
     MidiOutFactory.h
