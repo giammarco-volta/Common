@@ -25,6 +25,8 @@ qt_add_qml_module(NaadaLabUi
         DragValueField.qml
         MidiKnob.qml
         SearchableSelectionPopup.qml
+        TintedSvg.qml
+        ResponsivePageHost.qml
 )
 
 add_library(NaadaLab::Ui ALIAS NaadaLabUi)
