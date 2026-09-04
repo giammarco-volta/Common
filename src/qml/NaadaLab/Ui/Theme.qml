@@ -22,6 +22,7 @@ QtObject {
     readonly property color secondaryText:     "#B8B8B8"
     readonly property color disabledText:      "#707070"
 	readonly property color icon:              "#E0E0E0"
+	readonly property color link:              "#64B5F6"
 
     // =========================
     // NaadaLab accent

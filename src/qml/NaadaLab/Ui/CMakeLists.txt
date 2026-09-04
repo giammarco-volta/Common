@@ -29,6 +29,7 @@ qt_add_qml_module(NaadaLabUi
         ResponsivePageHost.qml
         NavigationIcon.qml
         NavigationRail.qml
+        AboutView.qml
 
     RESOURCES
         icons/gear.svg
