@@ -30,6 +30,7 @@ qt_add_qml_module(NaadaLabUi
         NavigationIcon.qml
         NavigationRail.qml
         AboutView.qml
+        MidiPortSelector.qml
 
     RESOURCES
         icons/gear.svg
