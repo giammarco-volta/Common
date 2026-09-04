@@ -21,6 +21,7 @@ qt_add_qml_module(NaadaLabUi
         LabeledComboBox.qml
         SearchableComboField.qml
         FormSection.qml
+        ManualView.qml
 )
 
 add_library(NaadaLab::Ui ALIAS NaadaLabUi)
