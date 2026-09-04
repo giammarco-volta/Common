@@ -10,7 +10,8 @@ Rectangle {
     property real railWidth: 56
     property real buttonHeight: 56
     property real iconScale: Math.min(1, buttonHeight / 56)
-    property url settingsIconSource
+    property url settingsIconSource:
+        Qt.resolvedUrl("icons/gear.svg")
 
     signal sectionActivated(string section)
     signal sectionPressAndHold(string section)
