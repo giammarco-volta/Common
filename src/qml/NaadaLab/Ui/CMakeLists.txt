@@ -27,6 +27,8 @@ qt_add_qml_module(NaadaLabUi
         SearchableSelectionPopup.qml
         TintedSvg.qml
         ResponsivePageHost.qml
+        NavigationIcon.qml
+        NavigationRail.qml
 )
 
 add_library(NaadaLab::Ui ALIAS NaadaLabUi)

@@ -12,6 +12,7 @@ QtObject {
     readonly property color panel:             "#2A2A2A"
     readonly property color panelDark:         "#252525"
     readonly property color border:            "#505050"
+	readonly property color selection:         "#3A3A3A"
 
     // =========================
     // Text
@@ -20,6 +21,7 @@ QtObject {
     readonly property color text:              "#F0F0F0"
     readonly property color secondaryText:     "#B8B8B8"
     readonly property color disabledText:      "#707070"
+	readonly property color icon:              "#E0E0E0"
 
     // =========================
     // NaadaLab accent
