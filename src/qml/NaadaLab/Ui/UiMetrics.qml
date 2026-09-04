@@ -12,6 +12,14 @@ QtObject {
     readonly property int phoneMaxHeight: 480
     readonly property int tabletMaxHeight: 800
 
+    function layoutClassForHeight(height) {
+        if (height <= phoneMaxHeight)
+            return UiMetrics.Phone
+        if (height <= tabletMaxHeight)
+            return UiMetrics.Tablet
+        return UiMetrics.Desktop
+    }
+
     function layoutClassName(layoutClass) {
         switch (layoutClass) {
         case UiMetrics.Phone:

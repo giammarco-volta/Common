@@ -22,6 +22,7 @@ qt_add_qml_module(NaadaLabUi
         SearchableComboField.qml
         FormSection.qml
         ManualView.qml
+        DragValueField.qml
 )
 
 add_library(NaadaLab::Ui ALIAS NaadaLabUi)
