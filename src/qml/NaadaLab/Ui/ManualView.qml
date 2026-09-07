@@ -14,6 +14,8 @@ Item {
     property bool minimumDelayDone: false
     property bool layoutSettled: false
     property bool initialScrollPositionApplied: false
+    property real rememberedContentY: 0
+    property bool restoringScrollPosition: false
 
     readonly property bool manualReady:
         forceShowManual || (minimumDelayDone && layoutSettled)
@@ -41,11 +43,61 @@ Item {
     }
 
     onManualReadyChanged: {
-        if (manualReady
-                && !initialScrollPositionApplied
-                && scrollView.contentItem) {
+        if (!manualReady || !scrollView.contentItem)
+            return
+
+        if (!initialScrollPositionApplied) {
             scrollView.contentItem.contentY = 0
+            rememberedContentY = 0
             initialScrollPositionApplied = true
+        } else if (visible) {
+            restoringScrollPosition = true
+            scrollRestoreTimer.restart()
+        }
+    }
+
+    onVisibleChanged: {
+        if (visible && initialScrollPositionApplied) {
+            restoringScrollPosition = true
+            scrollRestoreTimer.restart()
+        }
+    }
+
+    Connections {
+        target: scrollView.contentItem
+
+        function onContentYChanged() {
+            if (root.visible
+                    && root.manualReady
+                    && !root.restoringScrollPosition) {
+                root.rememberedContentY =
+                    Math.max(0, scrollView.contentItem.contentY)
+            }
+        }
+    }
+
+    Timer {
+        id: scrollRestoreTimer
+
+        interval: 0
+        repeat: false
+
+        onTriggered: {
+            if (!scrollView.contentItem)
+                return
+
+            const maximumContentY = Math.max(
+                0,
+                scrollView.contentItem.contentHeight
+                    - scrollView.contentItem.height)
+
+            scrollView.contentItem.contentY = Math.min(
+                root.rememberedContentY,
+                maximumContentY)
+
+            Qt.callLater(function() {
+                root.restoringScrollPosition = false
+            })
         }
     }
 
