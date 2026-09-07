@@ -13,6 +13,7 @@ Item {
 
     property bool minimumDelayDone: false
     property bool layoutSettled: false
+    property bool initialScrollPositionApplied: false
 
     readonly property bool manualReady:
         forceShowManual || (minimumDelayDone && layoutSettled)
@@ -40,8 +41,12 @@ Item {
     }
 
     onManualReadyChanged: {
-        if (manualReady && scrollView.contentItem)
+        if (manualReady
+                && !initialScrollPositionApplied
+                && scrollView.contentItem) {
             scrollView.contentItem.contentY = 0
+            initialScrollPositionApplied = true
+        }
     }
 
     Timer {
