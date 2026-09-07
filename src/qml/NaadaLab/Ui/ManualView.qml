@@ -79,7 +79,7 @@ Item {
     Timer {
         id: scrollRestoreTimer
 
-        interval: 0
+        interval: 100
         repeat: false
 
         onTriggered: {
