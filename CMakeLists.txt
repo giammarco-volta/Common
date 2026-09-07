@@ -19,6 +19,10 @@ find_package(Qt6 6.8 REQUIRED COMPONENTS
 
 qt_standard_project_setup(REQUIRES 6.8)
 
+include(
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/NaadaLabAndroidMidi.cmake"
+)
+
 add_subdirectory(src/midi)
 add_subdirectory(src/manual)
 
