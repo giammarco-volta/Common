@@ -54,6 +54,7 @@ Item {
             || root.iconKind === "configuration"
             || root.iconKind === "tracks"
             || root.iconKind === "curves"
+            || root.iconKind === "tuning"
             || root.iconKind === "manual"
 
         onPaint: {
@@ -128,6 +129,41 @@ Item {
                 ctx.moveTo(5, 22)
                 ctx.bezierCurveTo(12, 22, 17, 8, 25, 8)
                 ctx.stroke()
+            } else if (root.iconKind === "tuning") {
+                const centerX = 15
+                const centerY = 16
+                const circleRadius = 9.5
+                const dotRadius = 7
+
+                ctx.beginPath()
+                ctx.arc(centerX, centerY,
+                        circleRadius, 0, Math.PI * 2)
+                ctx.stroke()
+
+                for (let i = 0; i < 6; ++i) {
+                    const angle = -Math.PI / 2
+                                  + i * Math.PI / 3
+
+                    ctx.beginPath()
+                    ctx.arc(centerX + dotRadius * Math.cos(angle),
+                            centerY + dotRadius * Math.sin(angle),
+                            1.1, 0, Math.PI * 2)
+                    ctx.fill()
+                }
+
+                const tuningCenterAngle = -Math.PI / 3
+                const tuningCenterRadius = 13.5
+
+                ctx.beginPath()
+                ctx.arc(
+                    centerX
+                        + tuningCenterRadius
+                          * Math.cos(tuningCenterAngle),
+                    centerY
+                        + tuningCenterRadius
+                          * Math.sin(tuningCenterAngle),
+                    2.1, 0, Math.PI * 2)
+                ctx.fill()
             } else if (root.iconKind === "manual") {
                 ctx.beginPath()
                 ctx.moveTo(4, 7)
