@@ -16,6 +16,8 @@ Item {
     property bool initialScrollPositionApplied: false
     property real rememberedContentY: 0
     property bool restoringScrollPosition: false
+    property string pendingAnchor: ""
+    property var pendingAnchorIndexes: ({})
 
     readonly property bool manualReady:
         forceShowManual || (minimumDelayDone && layoutSettled)
@@ -42,43 +44,58 @@ Item {
         return count
     }
 
-    function scrollToAnchor(anchor) {
-        for (let i = 0; i < manualBlocks.length; ++i) {
-            if (manualBlocks[i].anchor !== anchor)
-                continue
+    function scrollToAnchor(anchor, anchorIndexes) {
+        if (!anchorIndexes || anchorIndexes[anchor] === undefined)
+            return false
 
-            const block = blockRepeater.itemAt(i)
-            if (!block || !scrollView.contentItem)
-                return false
+        const index = Number(anchorIndexes[anchor])
 
-            const maximumContentY = Math.max(
-                0,
-                scrollView.contentItem.contentHeight
-                    - scrollView.contentItem.height)
-            const targetContentY = Math.min(
-                Math.max(0, block.y),
-                maximumContentY)
+        restoringScrollPosition = true
+        manualList.cancelFlick()
 
-            restoringScrollPosition = true
-            rememberedContentY = targetContentY
-            scrollView.contentItem.contentY = targetContentY
+        manualList.positionViewAtIndex(index, ListView.Beginning)
 
-            Qt.callLater(function() {
-                root.restoringScrollPosition = false
-            })
+        Qt.callLater(function() {
+            root.rememberedContentY =
+                Math.max(0, manualList.contentY)
+            root.restoringScrollPosition = false
+        })
 
-            return true
-        }
-
-        return false
+        return true
     }
 
-    function activateLink(link) {
+    function highlightedLinkHtml(html, link) {
+        const openingTag = "<a href=\"" + link + "\">"
+        const linkStart = html.indexOf(openingTag)
+
+        if (linkStart < 0)
+            return html
+
+        const textStart = linkStart + openingTag.length
+        const linkEnd = html.indexOf("</a>", textStart)
+
+        if (linkEnd < 0)
+            return html
+
+        return html.substring(0, textStart)
+            + "<font color=\"" + Theme.link.toString() + "\">"
+            + html.substring(textStart, linkEnd)
+            + "</font>"
+            + html.substring(linkEnd)
+    }
+
+    function activateLink(link, anchorIndexes, sourceText, sourceHtml) {
         const linkText = link.toString()
 
         if (linkText.startsWith("#")) {
-            scrollToAnchor(
-                decodeURIComponent(linkText.substring(1)))
+            const anchor =
+                decodeURIComponent(linkText.substring(1))
+
+            sourceText.text = highlightedLinkHtml(sourceHtml, linkText)
+            pendingAnchor = anchor
+            pendingAnchorIndexes = anchorIndexes
+
+            anchorNavigationTimer.restart()
             return
         }
 
@@ -86,11 +103,11 @@ Item {
     }
 
     onManualReadyChanged: {
-        if (!manualReady || !scrollView.contentItem)
+        if (!manualReady)
             return
 
         if (!initialScrollPositionApplied) {
-            scrollView.contentItem.contentY = 0
+            manualList.contentY = 0
             rememberedContentY = 0
             initialScrollPositionApplied = true
         } else if (visible) {
@@ -106,19 +123,6 @@ Item {
         }
     }
 
-    Connections {
-        target: scrollView.contentItem
-
-        function onContentYChanged() {
-            if (root.visible
-                    && root.manualReady
-                    && !root.restoringScrollPosition) {
-                root.rememberedContentY =
-                    Math.max(0, scrollView.contentItem.contentY)
-            }
-        }
-    }
-
     Timer {
         id: scrollRestoreTimer
 
@@ -126,21 +130,32 @@ Item {
         repeat: false
 
         onTriggered: {
-            if (!scrollView.contentItem)
-                return
-
             const maximumContentY = Math.max(
                 0,
-                scrollView.contentItem.contentHeight
-                    - scrollView.contentItem.height)
+                manualList.contentHeight - manualList.height)
 
-            scrollView.contentItem.contentY = Math.min(
+            manualList.contentY = Math.min(
                 root.rememberedContentY,
                 maximumContentY)
 
             Qt.callLater(function() {
                 root.restoringScrollPosition = false
             })
+        }
+    }
+
+    Timer {
+        id: anchorNavigationTimer
+
+        interval: 100
+        repeat: false
+
+        onTriggered: {
+            root.scrollToAnchor(
+                root.pendingAnchor,
+                root.pendingAnchorIndexes)
+            root.pendingAnchor = ""
+            root.pendingAnchorIndexes = ({})
         }
     }
 
@@ -199,128 +214,137 @@ Item {
         }
     }
 
-    ScrollView {
-        id: scrollView
+    ListView {
+        id: manualList
 
         anchors.fill: parent
         anchors.margins: 16
         clip: true
 
-        Column {
-            id: contentColumn
+        model: root.manualBlocks
+        spacing: 14
+        cacheBuffer: height
 
-            visible: true
-            opacity: root.manualReady ? 1.0 : 0.0
+        opacity: root.manualReady ? 1.0 : 0.0
+        boundsBehavior: Flickable.StopAtBounds
 
-            width: Math.max(1, scrollView.availableWidth)
-            spacing: 14
+        ScrollBar.vertical: ScrollBar {
+            policy: ScrollBar.AsNeeded
+        }
 
-            onImplicitHeightChanged: {
+        onContentHeightChanged: {
+            if (!root.initialScrollPositionApplied)
                 root.scheduleLayoutSettling()
+        }
+
+        onContentYChanged: {
+            if (root.visible
+                    && root.manualReady
+                    && !root.restoringScrollPosition) {
+                root.rememberedContentY =
+                    Math.max(0, manualList.contentY)
+            }
+        }
+
+        delegate: Item {
+            id: blockRoot
+
+            width: manualList.width
+
+            height: modelData.type === "image"
+                    ? imageBlock.height
+                    : manualText.implicitHeight
+
+            Text {
+                id: manualText
+
+                visible: modelData.type === "text"
+
+                width: blockRoot.width
+
+                text: visible ? modelData.html : ""
+                textFormat: Text.RichText
+                wrapMode: Text.WordWrap
+
+                color: Theme.text
+                linkColor: Theme.accent
+
+                font.pixelSize: 15
+
+                onLinkActivated: function(link) {
+                    root.activateLink(
+                        link,
+                        modelData.anchorIndexes,
+                        manualText,
+                        modelData.html)
+                }
             }
 
-            Repeater {
-                id: blockRepeater
+            Item {
+                id: imageBlock
 
-                model: root.manualBlocks
+                visible: modelData.type === "image"
 
-                delegate: Item {
-                    id: blockRoot
+                width: blockRoot.width
 
-                    width: contentColumn.width
+                property real naturalWidth: modelData.naturalWidth !== undefined &&
+                                            modelData.naturalWidth > 0
+                                            ? modelData.naturalWidth
+                                            : 1
 
-                    height: modelData.type === "image"
-                            ? imageBlock.height
-                            : manualText.implicitHeight
+                property real naturalHeight: modelData.naturalHeight !== undefined &&
+                                             modelData.naturalHeight > 0
+                                             ? modelData.naturalHeight
+                                             : 1
 
-                    Text {
-                        id: manualText
+                property real displayWidth: Math.min(blockRoot.width, naturalWidth)
 
-                        visible: modelData.type === "text"
+                height: visible
+                        ? manualImage.height
+                          + (captionText.visible ? 4 + captionText.implicitHeight : 0)
+                        : 1
 
-                        width: blockRoot.width
+                Image {
+                    id: manualImage
 
-                        text: visible ? modelData.html : ""
-                        textFormat: Text.RichText
-                        wrapMode: Text.WordWrap
+                    visible: modelData.type === "image"
 
-                        color: Theme.text
-                        linkColor: Theme.accent
+                    anchors.top: parent.top
+                    anchors.horizontalCenter: parent.horizontalCenter
 
-                        font.pixelSize: 15
+                    width: imageBlock.displayWidth
+                    height: Math.round(width * imageBlock.naturalHeight / imageBlock.naturalWidth)
 
-                        onLinkActivated: function(link) {
-                            root.activateLink(link)
-                        }
-                    }
+                    source: modelData.type === "image" ? modelData.source : ""
+                    asynchronous: true
 
-                    Item {
-                        id: imageBlock
+                    sourceSize.width: Math.ceil(width)
+                    sourceSize.height: Math.ceil(height)
 
-                        visible: modelData.type === "image"
+                    fillMode: Image.PreserveAspectFit
+                    smooth: true
+                    cache: true
+                }
 
-                        width: blockRoot.width
+                Text {
+                    id: captionText
 
-                        property real naturalWidth: modelData.naturalWidth !== undefined &&
-                                                    modelData.naturalWidth > 0
-                                                    ? modelData.naturalWidth
-                                                    : 1
+                    visible: modelData.captionHtml !== undefined &&
+                             modelData.captionHtml.length > 0
 
-                        property real naturalHeight: modelData.naturalHeight !== undefined &&
-                                                     modelData.naturalHeight > 0
-                                                     ? modelData.naturalHeight
-                                                     : 1
+                    anchors.top: manualImage.bottom
+                    anchors.topMargin: 4
+                    anchors.horizontalCenter: manualImage.horizontalCenter
 
-                        property real displayWidth: Math.min(blockRoot.width, naturalWidth)
+                    width: manualImage.width
 
-                        height: visible
-                                ? manualImage.height
-                                  + (captionText.visible ? 4 + captionText.implicitHeight : 0)
-                                : 1
+                    text: visible ? modelData.captionHtml : ""
+                    textFormat: Text.RichText
+                    wrapMode: Text.WordWrap
 
-                        Image {
-                            id: manualImage
-
-                            visible: modelData.type === "image"
-
-                            anchors.top: parent.top
-                            anchors.horizontalCenter: parent.horizontalCenter
-
-                            width: imageBlock.displayWidth
-                            height: Math.round(width * imageBlock.naturalHeight / imageBlock.naturalWidth)
-
-                            source: modelData.type === "image" ? modelData.source : ""
-                            asynchronous: true
-
-                            sourceSize.width: Math.ceil(width)
-                            sourceSize.height: Math.ceil(height)
-
-                            fillMode: Image.PreserveAspectFit
-                            smooth: true
-                            cache: true
-                        }
-
-                        Text {
-                            id: captionText
-
-                            visible: modelData.captionHtml !== undefined &&
-                                     modelData.captionHtml.length > 0
-
-                            anchors.top: manualImage.bottom
-                            anchors.topMargin: 4
-                            anchors.horizontalCenter: manualImage.horizontalCenter
-
-                            width: manualImage.width
-
-                            text: visible ? modelData.captionHtml : ""
-                            textFormat: Text.RichText
-                            wrapMode: Text.WordWrap
-
-                            color: Theme.secondaryText
-                            font.pixelSize: 13
-                            font.italic: true
-                        }
-                    }
+                    color: Theme.secondaryText
+                    font.pixelSize: 13
+                    font.italic: true
                 }
             }
         }

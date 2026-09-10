@@ -171,6 +171,30 @@ void appendManualTextBlocks(
   }
 }
 
+void attachAnchorIndexes(QVariantList& blocks)
+{
+  QVariantMap anchorIndexes;
+
+  for (qsizetype i = 0; i < blocks.size(); ++i)
+  {
+    const QVariantMap block = blocks.at(i).toMap();
+    const QString anchor = block.value("anchor").toString();
+
+    if (!anchor.isEmpty())
+      anchorIndexes.insert(anchor, i);
+  }
+
+  if (anchorIndexes.isEmpty())
+    return;
+
+  for (qsizetype i = 0; i < blocks.size(); ++i)
+  {
+    QVariantMap block = blocks.at(i).toMap();
+    block.insert("anchorIndexes", anchorIndexes);
+    blocks[i] = block;
+  }
+}
+
 QString extractFirstImageSource(const QString& html)
 {
   static const QRegularExpression imageRe(
@@ -344,6 +368,8 @@ QVariantList ManualDocumentParser::loadFromResource(
 
   if (!finalText.isEmpty())
     appendManualTextBlocks(blocks, finalText);
+
+  attachAnchorIndexes(blocks);
 
   return blocks;
 }
