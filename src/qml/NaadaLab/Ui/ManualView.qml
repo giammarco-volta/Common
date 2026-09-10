@@ -42,6 +42,49 @@ Item {
         return count
     }
 
+    function scrollToAnchor(anchor) {
+        for (let i = 0; i < manualBlocks.length; ++i) {
+            if (manualBlocks[i].anchor !== anchor)
+                continue
+
+            const block = blockRepeater.itemAt(i)
+            if (!block || !scrollView.contentItem)
+                return false
+
+            const maximumContentY = Math.max(
+                0,
+                scrollView.contentItem.contentHeight
+                    - scrollView.contentItem.height)
+            const targetContentY = Math.min(
+                Math.max(0, block.y),
+                maximumContentY)
+
+            restoringScrollPosition = true
+            rememberedContentY = targetContentY
+            scrollView.contentItem.contentY = targetContentY
+
+            Qt.callLater(function() {
+                root.restoringScrollPosition = false
+            })
+
+            return true
+        }
+
+        return false
+    }
+
+    function activateLink(link) {
+        const linkText = link.toString()
+
+        if (linkText.startsWith("#")) {
+            scrollToAnchor(
+                decodeURIComponent(linkText.substring(1)))
+            return
+        }
+
+        Qt.openUrlExternally(link)
+    }
+
     onManualReadyChanged: {
         if (!manualReady || !scrollView.contentItem)
             return
@@ -177,6 +220,8 @@ Item {
             }
 
             Repeater {
+                id: blockRepeater
+
                 model: root.manualBlocks
 
                 delegate: Item {
@@ -205,7 +250,7 @@ Item {
                         font.pixelSize: 15
 
                         onLinkActivated: function(link) {
-                            Qt.openUrlExternally(link)
+                            root.activateLink(link)
                         }
                     }
 

@@ -3,6 +3,7 @@
 #include <QFile>
 #include <QImageReader>
 #include <QRegularExpression>
+#include <QVector>
 #include <QSizeF>
 #include <QSvgRenderer>
 #include <QVariantMap>
@@ -112,6 +113,62 @@ QString decorateManualTextFragment(QString html)
 )")
     + html
     + QStringLiteral("</div>");
+}
+
+void appendManualTextBlocks(
+  QVariantList& blocks,
+  const QString& html)
+{
+  static const QRegularExpression anchorTagRe(
+    QStringLiteral(
+      R"(<[A-Za-z][A-Za-z0-9]*\b[^>]*\bid\s*=\s*["']([^"']+)["'][^>]*>)"),
+    QRegularExpression::CaseInsensitiveOption);
+
+  QVector<QRegularExpressionMatch> anchorMatches;
+  auto matches = anchorTagRe.globalMatch(html);
+
+  while (matches.hasNext())
+    anchorMatches.append(matches.next());
+
+  auto appendBlock = [&blocks](
+                       const QString& fragment,
+                       const QString& anchor = QString())
+  {
+    const QString trimmedFragment = fragment.trimmed();
+
+    if (trimmedFragment.isEmpty())
+      return;
+
+    QVariantMap textBlock;
+    textBlock["type"] = QStringLiteral("text");
+    textBlock["html"] =
+      decorateManualTextFragment(trimmedFragment);
+
+    if (!anchor.isEmpty())
+      textBlock["anchor"] = anchor;
+
+    blocks.append(textBlock);
+  };
+
+  if (anchorMatches.isEmpty())
+  {
+    appendBlock(html);
+    return;
+  }
+
+  appendBlock(html.left(anchorMatches.first().capturedStart()));
+
+  for (qsizetype i = 0; i < anchorMatches.size(); ++i)
+  {
+    const qsizetype start = anchorMatches[i].capturedStart();
+    const qsizetype end = i + 1 < anchorMatches.size()
+      ? anchorMatches[i + 1].capturedStart()
+      : html.size();
+
+    appendBlock(
+      html.mid(start, end - start),
+      anchorMatches[i].captured(1).trimmed());
+  }
 }
 
 QString extractFirstImageSource(const QString& html)
@@ -237,13 +294,7 @@ QVariantList ManualDocumentParser::loadFromResource(
       html.mid(position, start - position).trimmed();
 
     if (!textPart.isEmpty())
-    {
-      QVariantMap textBlock;
-      textBlock["type"] = QStringLiteral("text");
-      textBlock["html"] =
-        decorateManualTextFragment(textPart);
-      blocks.append(textBlock);
-    }
+      appendManualTextBlocks(blocks, textPart);
 
     const QString figureHtml = match.captured(1);
 
@@ -292,13 +343,7 @@ QVariantList ManualDocumentParser::loadFromResource(
   const QString finalText = html.mid(position).trimmed();
 
   if (!finalText.isEmpty())
-  {
-    QVariantMap textBlock;
-    textBlock["type"] = QStringLiteral("text");
-    textBlock["html"] =
-      decorateManualTextFragment(finalText);
-    blocks.append(textBlock);
-  }
+    appendManualTextBlocks(blocks, finalText);
 
   return blocks;
 }
