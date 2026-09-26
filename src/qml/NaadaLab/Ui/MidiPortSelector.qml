@@ -23,12 +23,23 @@ RowLayout {
         return -1
     }
 
+    // ComboBox may choose index 0 while applying a new model, after a binding
+    // to currentIndex has already evaluated. Reconcile by name once that model
+    // update has settled. Only user activation emits portSelected.
+    function syncSelection() {
+        portCombo.currentIndex = root.indexOfPort(root.currentPort)
+    }
+
+    onPortsChanged: Qt.callLater(root.syncSelection)
+    onCurrentPortChanged: Qt.callLater(root.syncSelection)
+    Component.onCompleted: Qt.callLater(root.syncSelection)
+
     LabeledComboBox {
         id: portCombo
 
         title: root.title
         modelData: root.ports
-        currentIndex: root.indexOfPort(root.currentPort)
+        currentIndex: -1
 
         Layout.fillWidth: true
         Layout.preferredWidth: 2
