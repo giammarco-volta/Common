@@ -1,19 +1,10 @@
 import QtQuick
-import QtQuick.Effects
 
 Item {
     id: root
 
     property url source
     property color tintColor: "white"
-
-    Rectangle {
-        id: tintSource
-
-        anchors.fill: parent
-        color: root.tintColor
-        visible: false
-    }
 
     Image {
         id: svgMask
@@ -23,12 +14,45 @@ Item {
         fillMode: Image.PreserveAspectFit
         smooth: true
         visible: false
+        onStatusChanged: tintedImage.requestPaint()
     }
 
-    MultiEffect {
+    // Paint the SVG and tint its alpha mask on the CPU. Unlike MultiEffect,
+    // this also works with Qt Quick's software renderer (e.g. tablet fallback).
+    Canvas {
+        id: tintedImage
         anchors.fill: parent
-        source: tintSource
-        maskEnabled: true
-        maskSource: svgMask
+        property url imageSource: root.source
+
+        onImageSourceChanged: {
+            if (imageSource.toString().length > 0)
+                loadImage(imageSource)
+            requestPaint()
+        }
+        onImageLoaded: requestPaint()
+
+        onPaint: {
+            const ctx = getContext("2d")
+            ctx.clearRect(0, 0, width, height)
+            if (!isImageLoaded(imageSource)
+                    || svgMask.implicitWidth <= 0 || svgMask.implicitHeight <= 0)
+                return
+
+            const factor = Math.min(width / svgMask.implicitWidth,
+                                    height / svgMask.implicitHeight)
+            const w = svgMask.implicitWidth * factor
+            const h = svgMask.implicitHeight * factor
+            ctx.save()
+            ctx.drawImage(imageSource, (width - w) / 2, (height - h) / 2, w, h)
+            ctx.globalCompositeOperation = "source-in"
+            ctx.fillStyle = root.tintColor
+            ctx.fillRect(0, 0, width, height)
+            ctx.restore()
+        }
+
+        Connections {
+            target: root
+            function onTintColorChanged() { tintedImage.requestPaint() }
+        }
     }
 }
