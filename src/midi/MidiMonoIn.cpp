@@ -5,11 +5,15 @@ void MidiIn_MonoInterpreter::onInnerEvent(const MidiInEvent& ev)
   if (!isShort(ev))
     return;
 
-  // Filtra canale sorgente
+  bool sourceChannel;
   {
     std::lock_guard<std::mutex> lock(stateMutex_);
-    if (ev.channel() != sourceChannel_)
-      return;
+    sourceChannel = ev.channel() == sourceChannel_;
+  }
+  if (!sourceChannel) {
+    if (configuration_.forwardOffChannelControlChanges && ev.message() == 0xB0)
+      dispatchToUser(ev);
+    return;
   }
 
   // 1) Eventi che non vanno propagati

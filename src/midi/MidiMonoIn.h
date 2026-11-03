@@ -21,6 +21,8 @@ public:
   {
     std::bitset<128> ignoredControlChanges;
     bool ignoreProgramChanges = false;
+    // Optional raw CC delivery outside the note channel, without altering note state.
+    bool forwardOffChannelControlChanges = false;
     NoteOffStatePolicy noteOffStatePolicy = NoteOffStatePolicy::KeepLastNote;
   };
 
