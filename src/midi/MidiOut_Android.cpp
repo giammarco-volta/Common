@@ -3,6 +3,7 @@
 #if defined(Q_OS_ANDROID) || defined(ANDROID)
 
 #include "MidiAndroidBridge.h"
+#include "LicenseAccess.h"
 
 #include <QDebug>
 #include <QJniObject>
@@ -62,6 +63,11 @@ void MidiOut_Android::close()
 
 bool MidiOut_Android::sendShort(uint8_t status, uint8_t data1, uint8_t data2)
 {
+  // Always allow note cleanup, even when musical output is locked.
+  const auto type = status & 0xf0;
+  const bool cleanup = type == 0x80 || (type == 0x90 && data2 == 0)
+    || (type == 0xb0 && (data1 == 120 || data1 == 123 || (data1 == 64 && data2 == 0)));
+  if (!NaadaLab::LicenseAccess::midiAllowed() && !cleanup) return false;
   if (currentIndex_ < 0)
     return false;
 
@@ -78,7 +84,7 @@ bool MidiOut_Android::sendShort(uint8_t status, uint8_t data1, uint8_t data2)
 
 bool MidiOut_Android::sendSysEx(const std::vector<uint8_t>& sysex)
 {
-  if (currentIndex_ < 0 || sysex.empty())
+  if (!NaadaLab::LicenseAccess::midiAllowed() || currentIndex_ < 0 || sysex.empty())
     return false;
 
   QJniEnvironment env;
