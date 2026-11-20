@@ -31,9 +31,25 @@ function(naadalab_configure_android_midi_package target app_android_dir)
 
     file(MAKE_DIRECTORY "${java_package_dir}")
 
+    # Preserve an application's existing MIDI bridge override.
+    if(NOT EXISTS "${app_android_dir}/src/org/qtproject/qt/android/MidiAndroidBridge.java")
     configure_file(
         "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../android/src/org/qtproject/qt/android/MidiAndroidBridge.java"
         "${java_package_dir}/MidiAndroidBridge.java"
+        COPYONLY
+    )
+    endif()
+
+    file(MAKE_DIRECTORY "${package_dir}/src/com/naadalab/licensing")
+    configure_file(
+        "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../android/src/com/naadalab/licensing/PlayLicenseBridge.java"
+        "${package_dir}/src/com/naadalab/licensing/PlayLicenseBridge.java"
+        COPYONLY
+    )
+
+    configure_file(
+        "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../android/src/com/naadalab/licensing/ReviewAccessToken.java"
+        "${package_dir}/src/com/naadalab/licensing/ReviewAccessToken.java"
         COPYONLY
     )
 

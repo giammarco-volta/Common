@@ -56,6 +56,7 @@ target_include_directories(NaadaLabMidi
 target_link_libraries(NaadaLabMidi
     PUBLIC
         Qt6::Core
+        NaadaLab::License
 )
 
 if(WIN32)

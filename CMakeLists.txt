@@ -23,6 +23,7 @@ include(
     "${CMAKE_CURRENT_SOURCE_DIR}/cmake/NaadaLabAndroidMidi.cmake"
 )
 
+add_subdirectory(src/licensing)
 add_subdirectory(src/midi)
 add_subdirectory(src/manual)
 

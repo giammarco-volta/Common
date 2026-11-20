@@ -12,6 +12,7 @@ qt_add_qml_module(NaadaLabUi
     RESOURCE_PREFIX /qt/qml
     NO_PLUGIN
     QML_FILES
+        LicensePanel.qml
         Theme.qml
         UiMetrics.qml
         LabeledControl.qml
