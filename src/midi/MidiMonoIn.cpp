@@ -11,7 +11,8 @@ void MidiIn_MonoInterpreter::onInnerEvent(const MidiInEvent& ev)
     sourceChannel = ev.channel() == sourceChannel_;
   }
   if (!sourceChannel) {
-    if (configuration_.forwardOffChannelControlChanges && ev.message() == 0xB0)
+    if (configuration_.forwardOffChannelMessages
+        || (configuration_.forwardOffChannelControlChanges && ev.message() == 0xB0))
       dispatchToUser(ev);
     return;
   }

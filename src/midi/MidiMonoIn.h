@@ -23,6 +23,8 @@ public:
     bool ignoreProgramChanges = false;
     // Optional raw CC delivery outside the note channel, without altering note state.
     bool forwardOffChannelControlChanges = false;
+    // Optional raw delivery for independent control channels; does not alter note state.
+    bool forwardOffChannelMessages = false;
     NoteOffStatePolicy noteOffStatePolicy = NoteOffStatePolicy::KeepLastNote;
   };
 

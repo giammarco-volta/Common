@@ -56,6 +56,7 @@ Item {
             || root.iconKind === "curves"
             || root.iconKind === "tuning"
             || root.iconKind === "manual"
+            || root.iconKind === "presets"
 
         onPaint: {
             const ctx = getContext("2d")
@@ -67,6 +68,15 @@ Item {
             ctx.lineCap = "round"
             ctx.lineJoin = "round"
 
+            if (root.iconKind === "presets") {
+                for (let row = 0; row < 3; ++row) {
+                    const y = 7 + row * 8
+                    ctx.fillRect(3, y - 1, 3, 3)
+                    ctx.beginPath()
+                    ctx.moveTo(11, y); ctx.lineTo(27, y)
+                    ctx.stroke()
+                }
+            }
             if (root.iconKind === "midi"
                     || root.iconKind === "configuration") {
                 ctx.beginPath()
